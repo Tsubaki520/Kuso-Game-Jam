@@ -4,90 +4,94 @@ using UnityEngine;
 
 public class MainController : MonoBehaviour
 {
-    [Header ("Settings")]
-    [Range (1, 20f)]
-    public int moveSpeed = 2;
-    [Range (1, 20f)]
-    public int rotateSpeed = 10;
-    [Range (0, 1f)]
-    public float pointerRadius = 0.5f;
+    private float moveSpeed = 10;
 
-    private Transform mainCameraTransform;
-    private Transform cameraDir;
-    private Vector3 V3_moveVector = Vector3.zero;
-    private Vector3 V3_lastPosition = Vector3.zero;
-
-    public Transform pointer;
-    public RectTransform pointerRange;
-
-    private Camera cam;
-
-    private void Awake ()
-    {
-        cam = Camera.main;
-    }
+    public GameObject targetObj;
 
     void Start ()
     {
         Init ();
     }
 
-    private void Init ()
+    public void Init ()
     {
-        mainCameraTransform = Camera.main.transform;
-        cameraDir = transform;
-
+        targetObj = null;
         GameManager.playerReady = true;
     }
 
     void Update ()
     {
-        VectorDetect ();
-        CheckMousePointer ();
-        Move ();
-        Rotate ();
-    }
+        if (!GameManager.SceneReady) return;
 
-    void VectorDetect ()
-    {
-        if (mainCameraTransform)
+        if (GameManager.Instance.GameStatus == GameManager.Status.PLAY)
         {
-            cameraDir.eulerAngles = new Vector3 (
-            mainCameraTransform.eulerAngles.x, mainCameraTransform.eulerAngles.y, mainCameraTransform.eulerAngles.z);
+            Move ();
+            CheckMouseBotton ();
         }
-    }
-
-    void CheckMousePointer ()
-    {
-        Vector2 pointerPosition = cam.ScreenToWorldPoint (pointer.position);
-        OnMousePointerMove (pointerPosition);
-    }
-
-    void OnMousePointerMove (Vector2 position)
-    {
-
     }
 
     private void Move ()
     {
-        Vector3 velocity = transform.up.normalized * moveSpeed * Time.deltaTime;
-        if (Vector3.Distance (velocity, Vector3.zero) > Vector3.Distance (transform.position, V3_moveVector))
-            velocity = (V3_moveVector - transform.position) * 0.90f;
-
-        float distance = Vector3.Distance (transform.position + velocity, V3_moveVector);
-
-        if (distance > pointerRadius)
-            transform.position += velocity;
+        if (Input.GetAxis ("Mouse X") != 0)
+        {
+            transform.position += new Vector3 (Input.GetAxisRaw ("Mouse X") * Time.deltaTime * moveSpeed,
+                0f, Input.GetAxisRaw ("Mouse Y") * Time.deltaTime * moveSpeed);
+        }
     }
 
-    private void Rotate ()
+    private void CheckMouseBotton ()
     {
-        Vector3 dir = transform.position - V3_moveVector;
-        float angle = Mathf.Atan2 (dir.y, dir.x) * Mathf.Rad2Deg + 90;
-        transform.rotation = Quaternion.Lerp (
-            transform.rotation,
-            Quaternion.AngleAxis (angle, Vector3.forward),
-            rotateSpeed * Time.deltaTime
-        );
+        if (Input.GetMouseButtonUp (0))
+            OnMouseButtonDown (0);
+
+        if (Input.GetMouseButtonDown (0))
+            OnMouseButtonDown (1);
+
+        if (Input.GetMouseButtonDown (1))
+            OnMouseButtonDown (2);
+    }
+
+    private void OnMouseButtonDown (int type)
+    {
+        if (type == 0)
+        {
+            if (targetObj)
+            {
+                if (GameManager.Instance.uI.Button1)
+                {
+                    targetObj.transform.position += new Vector3 (0, -0.2f, 0);
+                    targetObj.transform.Rotate (0, 0, -135);
+                    GameManager.Instance.sceneController.isSetItem = false;
+                }
+                if (GameManager.Instance.uI.Button2)
+                {
+                    targetObj.transform.position += new Vector3 (0, -0.1f, 0);
+                    targetObj.transform.Rotate (-30, 0, 0);
+                }
+            }
+        }
+        else if (type == 1)
+        {
+            if (targetObj)
+            {
+                if (GameManager.Instance.uI.Button1)
+                {
+                    targetObj.transform.position += new Vector3 (0, 0.2f, 0);
+                    targetObj.transform.Rotate (0, 0, 135);
+                    GameManager.Instance.sceneController.isSetItem = true;
+                    GameManager.Instance.audioManager.PlayAudio (0, 1);
+                }
+                if (GameManager.Instance.uI.Button2)
+                {
+                    targetObj.transform.position += new Vector3 (0, 0.1f, 0);
+                    targetObj.transform.Rotate (30, 0, 0);
+                    GameManager.Instance.audioManager.PlayAudio (0, 1);
+                }
+            }
+        }
+        else if (type == 2)
+        {
+            GameManager.Instance.uI.Button1 = GameManager.Instance.uI.Button2 = false;
+        }
     }
 }

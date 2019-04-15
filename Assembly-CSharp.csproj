@@ -62,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\01-Scripts\AudioManager.cs" />
-    <Compile Include="Assets\01-Scripts\CameraController.cs" />
     <Compile Include="Assets\01-Scripts\GameManager.cs" />
     <Compile Include="Assets\01-Scripts\MainController.cs" />
     <Compile Include="Assets\01-Scripts\SceneController.cs" />
